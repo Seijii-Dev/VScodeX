@@ -33,6 +33,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.ChevronRight
@@ -120,6 +122,15 @@ private fun FileTreeNodeItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 2.dp)
+                .background(
+                    color = if (depth == 0) {
+                        MaterialTheme.colorScheme.surfaceContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.42f)
+                    },
+                    shape = RoundedCornerShape(12.dp)
+                )
                 .combinedClickable(
                     onClick = {
                         if (node.file.isDirectory) {
@@ -132,7 +143,7 @@ private fun FileTreeNodeItem(
                         onFileLongClick(node)
                     }
                 )
-                .padding(vertical = 4.dp),
+                .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Spacer(modifier = Modifier.width(horizontalPadding))

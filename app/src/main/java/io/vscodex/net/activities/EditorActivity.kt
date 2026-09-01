@@ -19,6 +19,8 @@ import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -207,8 +209,15 @@ class EditorActivity : BaseComposeActivity() {
                 drawerContent = {
                     ModalDrawerSheet(
                         drawerState = drawerState,
-                        modifier = Modifier.fillMaxWidth(fraction = drawerFraction),
-                        drawerContainerColor = MaterialTheme.colorScheme.background,
+                        modifier = Modifier
+                            .fillMaxWidth(fraction = drawerFraction)
+                            .clip(
+                                RoundedCornerShape(
+                                    topEnd = 28.dp,
+                                    bottomEnd = 28.dp
+                                )
+                            ),
+                        drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         drawerContentColor = contentColorFor(MaterialTheme.colorScheme.background)
                     ) {
                         EditorDrawerSheet(

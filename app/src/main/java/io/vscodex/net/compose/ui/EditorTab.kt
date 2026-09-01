@@ -33,10 +33,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.rounded.Close
@@ -87,7 +85,7 @@ fun EditorTab(
         divider = {},
         modifier = modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         files.fastForEachIndexed { index, file ->
             val isActive = index == selectedFileIndex
@@ -99,6 +97,10 @@ fun EditorTab(
             AnimatedTab(
                 index = index,
                 selectedIndex = selectedFileIndex,
+                selectedColor = MaterialTheme.colorScheme.primary,
+                onSelectedColor = MaterialTheme.colorScheme.onPrimary,
+                unselectedColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                onUnselectedColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 onClick = {
                     if (isActive) {
                         isMenuExpanded = true
