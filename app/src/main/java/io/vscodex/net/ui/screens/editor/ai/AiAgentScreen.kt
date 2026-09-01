@@ -111,6 +111,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.ai.client.generativeai.type.asTextOrNull
 import com.itsvks.monaco.MonacoEditor
 import dev.jeziellago.compose.markdowntext.MarkdownText
+import io.vscodex.net.core.ai.AiAgentOrchestrator
+import io.vscodex.net.core.ai.AgentEvent
+import io.vscodex.net.core.ai.AgentToolContext
 import io.vscodex.net.core.ai.AiChatHistory
 import io.vscodex.net.core.ai.ChatMessage
 import io.vscodex.net.core.ai.Gemini
@@ -120,6 +123,7 @@ import io.vscodex.net.ui.screens.editor.components.view.CodeEditorView
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 
 // ─── Data models ─────────────────────────────────────────────────────────────
 
@@ -220,6 +224,7 @@ fun AiAgentScreen(
     val context   = LocalContext.current
 
     var activeJob by remember { mutableStateOf<Job?>(null) }
+    val agentOrchestrator = remember { AiAgentOrchestrator() }
 
     val editorUiState by editorViewModel.uiState.collectAsStateWithLifecycle()
     var lastAnalyzedFilePath by remember { mutableStateOf<String?>(null) }
@@ -419,6 +424,12 @@ fun AiAgentScreen(
             .filter { !it.isStreaming && it.content.isNotBlank() && !it.isError }
             .map { ChatMessage(role = if (it.isUser) "user" else "assistant", content = it.content) }
 
+    fun buildAgentHistory(upToIndex: Int): JSONArray = JSONArray().apply {
+        buildHistory(upToIndex).forEach { message ->
+            put(org.json.JSONObject().put("role", message.role).put("content", message.content))
+        }
+    }
+
     fun persistHistory(filePath: String) {
         val toSave = messages
             .filter { !it.isStreaming && it.content.isNotBlank() }
@@ -463,39 +474,67 @@ fun AiAgentScreen(
             messages.add(placeholder)
         }
 
-        val history = buildHistory(upToIndex = streamingIndex) + ChatMessage("user", fullPrompt)
-
         val job = scope.launch {
             try {
                 if (OpenRouter.isConfigured()) {
-                    val accumulated = StringBuilder()
-                    val streamResult: Result<String> = OpenRouter.chatStream(
-                        history = history,
-                        onToken = { token: String ->
-                            accumulated.append(token)
-                            if (streamingIndex < messages.size) {
-                                messages[streamingIndex] = messages[streamingIndex].copy(
-                                    content    = accumulated.toString(),
-                                    isStreaming = true
-                                )
-                            }
-                        }
+                    val openedFile = editorUiState.openedFiles.getOrNull(editorUiState.selectedFileIndex)?.file
+                    val root = openedFile?.asRawFile()?.let { raw ->
+                        if (raw.isDirectory) raw else raw.parentFile
+                    }
+                    val agentContext = AgentToolContext(
+                        workspaceRoot = root,
+                        currentFile = openedFile?.asRawFile(),
+                        selectedText = getSelectedText(),
                     )
-                    streamResult.onSuccess { _: String ->
+                    val agentResult = agentOrchestrator.run(
+                        prompt = fullPrompt,
+                        context = agentContext,
+                        previousMessages = buildAgentHistory(streamingIndex),
+                        onEvent = { event ->
+                            when (event) {
+                                is AgentEvent.ToolStarted -> {
+                                    if (streamingIndex < messages.size) {
+                                        messages[streamingIndex] = messages[streamingIndex].copy(
+                                            content = "_Working with ${event.name.replace('_', ' ')}…_",
+                                            isStreaming = true,
+                                        )
+                                    }
+                                }
+                                is AgentEvent.AssistantText -> {
+                                    if (streamingIndex < messages.size) {
+                                        messages[streamingIndex] = messages[streamingIndex].copy(
+                                            content = event.text,
+                                            isStreaming = true,
+                                        )
+                                    }
+                                }
+                                is AgentEvent.ToolFinished -> Unit
+                                is AgentEvent.ApprovalRequired -> {
+                                    if (streamingIndex < messages.size) {
+                                        messages[streamingIndex] = messages[streamingIndex].copy(
+                                            content = "**Approval required**\\n\\n${event.preview}",
+                                            isStreaming = true,
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                    )
+                    agentResult.onSuccess { result ->
                         if (streamingIndex < messages.size) {
                             messages[streamingIndex] = messages[streamingIndex].copy(
-                                content    = accumulated.toString(),
-                                isStreaming = false
+                                content = result.answer,
+                                isStreaming = false,
                             )
                             currentFilePath()?.let { persistHistory(it) }
                         }
-                    }.onFailure { error: Throwable ->
+                    }.onFailure { error ->
                         if (streamingIndex < messages.size) {
                             messages[streamingIndex] = AiMessage(
-                                content    = "⚠ ${error.message ?: "Something went wrong."}",
-                                isUser     = false,
-                                isError    = true,
-                                isStreaming = false
+                                content = "⚠ ${error.message ?: "Something went wrong."}",
+                                isUser = false,
+                                isError = true,
+                                isStreaming = false,
                             )
                         }
                     }

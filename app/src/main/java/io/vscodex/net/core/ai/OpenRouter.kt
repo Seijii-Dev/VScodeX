@@ -31,6 +31,17 @@ import java.net.URL
 /** A single turn in the conversation history sent to the API. */
 data class ChatMessage(val role: String, val content: String)
 
+data class AgentToolCall(
+    val id: String,
+    val name: String,
+    val arguments: JSONObject,
+)
+
+data class AgentTurn(
+    val content: String,
+    val toolCalls: List<AgentToolCall> = emptyList(),
+)
+
 object OpenRouter {
 
     private const val BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -145,6 +156,44 @@ object OpenRouter {
         history  = listOf(ChatMessage("user", prompt)),
         onToken  = {}
     )
+
+    /**
+     * One agent turn with OpenAI-compatible function calling. Tool execution is
+     * deliberately owned by the caller so every local side effect can be
+     * inspected and approval-gated before it is applied.
+     */
+    suspend fun agentTurn(
+        messages: JSONArray,
+        tools: JSONArray,
+    ): Result<AgentTurn> = withContext(Dispatchers.IO) {
+        runCatching {
+            val request = JSONObject()
+                .put("model", model())
+                .put("messages", messages)
+                .put("tools", tools)
+                .put("tool_choice", "auto")
+                .put("max_completion_tokens", BaseApplication.instance.openRouterConfig().maxTokens)
+                .put("temperature", BaseApplication.instance.openRouterConfig().temperature.toDouble())
+            val conn = openConnection(stream = false)
+            OutputStreamWriter(conn.outputStream, Charsets.UTF_8).use { it.write(request.toString()) }
+            val code = conn.responseCode
+            val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+            val body = BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { it.readText() }
+            conn.disconnect()
+            if (code !in 200..299) throw RuntimeException("OpenRouter error $code: $body")
+
+            val message = JSONObject(body).getJSONArray("choices").getJSONObject(0).getJSONObject("message")
+            val calls = mutableListOf<AgentToolCall>()
+            val rawCalls = message.optJSONArray("tool_calls") ?: JSONArray()
+            for (i in 0 until rawCalls.length()) {
+                val call = rawCalls.getJSONObject(i)
+                val function = call.getJSONObject("function")
+                val arguments = runCatching { JSONObject(function.optString("arguments", "{}")) }.getOrDefault(JSONObject())
+                calls += AgentToolCall(call.optString("id", "call_$i"), function.optString("name"), arguments)
+            }
+            AgentTurn(message.optString("content", ""), calls)
+        }
+    }
 
     // ── public API ────────────────────────────────────────────────────────────
 
