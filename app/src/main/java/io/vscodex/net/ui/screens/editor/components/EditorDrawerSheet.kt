@@ -17,9 +17,9 @@ package io.vscodex.net.ui.screens.editor.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
@@ -125,24 +125,20 @@ fun EditorDrawerSheet(
         }
     }
 
-    Row(
+    Column(
         modifier = Modifier.fillMaxSize()
     ) {
         if (!isAiScreen) {
-            NavRail(selectedItemIndex = selectedItem)
-        }
-
-        Column {
-            if (!isAiScreen) {
-                Heading(
+            Heading(
                     title            = title,
                     isMaximized      = isMaximized,
                     onToggleMaximize = { isMaximized = !isMaximized; onMaximizeChanged(isMaximized) },
                     onCloseDrawerRequest = { closeDrawer() }
-                )
-            }
+            )
+        }
 
-            NavHost(
+        NavHost(
+                modifier = Modifier.weight(1f),
                 navController = LocalEditorDrawerNavController.current,
                 startDestination = EditorDrawerScreens.FileExplorer
             ) {
@@ -261,12 +257,18 @@ fun EditorDrawerSheet(
                     )
                 }
             }
+
+        if (!isAiScreen) {
+            NavRail(
+                modifier = Modifier.fillMaxWidth(),
+                selectedItemIndex = selectedItem,
+            )
         }
     }
 }
 
 @Composable
-fun NavigationSpaceActions(
+private fun NavigationSpaceActions(
     modifier: Modifier = Modifier,
     onAiClick: (() -> Unit)? = null,
     onItemClick: (NavigationSpaceItem) -> Unit

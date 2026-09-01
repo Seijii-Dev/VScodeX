@@ -16,7 +16,6 @@
 package io.vscodex.net.ui.screens.editor.components.drawer
 
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Settings
@@ -25,8 +24,8 @@ import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Terminal
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -34,7 +33,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import io.vscodex.net.activities.Editor.LocalEditorDrawerNavController
@@ -73,11 +71,12 @@ fun NavRail(
     val context = LocalContext.current
     val navController = LocalEditorDrawerNavController.current
 
-    NavigationRail(
-        modifier = modifier.widthIn(max = 60.dp)
+    NavigationBar(
+        modifier = modifier,
+        containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         navigationRailItems.fastForEachIndexed { index, name ->
-            NavigationRailItem(
+            NavigationBarItem(
                 icon = {
                     Icon(
                         imageVector = if (selectedItemIndex == index) navRailItemIconsSelected[index] else navRailItemIconsUnselected[index],
@@ -85,13 +84,7 @@ fun NavRail(
                         modifier = Modifier.size(20.dp),
                     )
                 },
-                label = {
-                    Text(
-                        text = name,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                alwaysShowLabel = true,
+                label = { Text(text = name) },
                 selected = selectedItemIndex == index,
                 onClick = {
                     when (index) {

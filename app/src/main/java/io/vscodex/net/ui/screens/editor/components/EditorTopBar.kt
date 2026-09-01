@@ -40,6 +40,7 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -97,6 +98,7 @@ import io.github.rosemoe.sora.event.KeyBindingEvent
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -245,26 +247,30 @@ fun EditorTopBar(
 
     VSXTopBar(
         modifier = modifier,
-        title = {
-            Image(
-                painter = painterResource(R.mipmap.ic_launcher_adaptive_fore),
-                contentDescription = stringResource(id = strings.app_name),
-                modifier = Modifier.size(32.dp)
-            )
-        },
+        title = {},
         navigationIcon = {
             Tooltip(stringResource(id = strings.open_drawer)) {
-                IconButton(onClick = {
-                    scope.launch {
-                        drawerState.apply {
-                            if (isOpen) close() else open()
+                Surface(
+                    onClick = {
+                        scope.launch {
+                            drawerState.apply {
+                                if (isOpen) close() else open()
+                            }
                         }
+                    },
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    shape = MaterialTheme.shapes.medium,
+                ) {
+                    Box(
+                        modifier = Modifier.size(48.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Folder,
+                            contentDescription = stringResource(id = strings.open_drawer),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
                     }
-                }) {
-                    Icon(
-                        imageVector = Icons.Rounded.Menu,
-                        contentDescription = stringResource(id = strings.open_drawer)
-                    )
                 }
             }
         },
@@ -374,30 +380,6 @@ fun EditorTopBar(
                 }
             }
 
-            Tooltip(stringResource(id = strings.editor_undo)) {
-                IconButton(
-                    onClick = { selectedEditor?.undo() ?: selectedMonacoEditor?.undo() },
-                    enabled = canUndo
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.Undo,
-                        contentDescription = null
-                    )
-                }
-            }
-
-            Tooltip(stringResource(id = strings.editor_redo)) {
-                IconButton(
-                    onClick = { selectedEditor?.redo() ?: selectedMonacoEditor?.redo() },
-                    enabled = canRedo
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.Redo,
-                        contentDescription = null
-                    )
-                }
-            }
-
             LaunchedEffect(Unit) {
                 commandPaletteManager.addCommand(
                     newCommand("Terminal", "Ctrl+T") {
@@ -427,6 +409,26 @@ fun EditorTopBar(
                     shape = MaterialTheme.shapes.medium,
                     onDismissRequest = { showMenu = false }
                 ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(id = strings.editor_undo)) },
+                        leadingIcon = { Icon(Icons.AutoMirrored.Rounded.Undo, contentDescription = null) },
+                        enabled = canUndo,
+                        onClick = {
+                            selectedEditor?.undo() ?: selectedMonacoEditor?.undo()
+                            showMenu = false
+                        }
+                    )
+
+                    DropdownMenuItem(
+                        text = { Text(stringResource(id = strings.editor_redo)) },
+                        leadingIcon = { Icon(Icons.AutoMirrored.Rounded.Redo, contentDescription = null) },
+                        enabled = canRedo,
+                        onClick = {
+                            selectedEditor?.redo() ?: selectedMonacoEditor?.redo()
+                            showMenu = false
+                        }
+                    )
+
                     DropdownMenuItem(
                         text = { Text(stringResource(id = strings.editor_search)) },
                         leadingIcon = {
