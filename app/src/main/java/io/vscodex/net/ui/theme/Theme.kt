@@ -18,8 +18,11 @@ package io.vscodex.net.ui.theme
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -154,6 +157,7 @@ fun VSXTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = VSXShapes,
     ) {
         content()
     }
@@ -166,6 +170,7 @@ fun VSXTerminalTheme(
     MaterialTheme(
         colorScheme = darkScheme,
         typography = Typography,
+        shapes = VSXShapes,
         content = content
     )
 }
@@ -176,3 +181,18 @@ private fun ColorScheme.maybeAmoled(isAmoledMode: Boolean): ColorScheme {
 
 val atLeastS: Boolean
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+/**
+ * Applies the app theme to a full-screen surface, matching Klyx's root-surface
+ * pattern so edge-to-edge content never inherits an unintended window color.
+ */
+@Composable
+fun VSXThemeSurface(content: @Composable () -> Unit) {
+    VSXTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+            content = content,
+        )
+    }
+}

@@ -1,6 +1,8 @@
 package io.vscodex.net.ui.theme
 
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.googlefonts.Font
@@ -21,6 +23,18 @@ val InterFontFamily = FontFamily(
 )
 
 private val baseline = Typography()
+
+/**
+ * Expressive shape scale used across the app. The larger containers echo Klyx's
+ * rounded Material 3 surfaces while keeping compact editor controls readable.
+ */
+val VSXShapes = Shapes(
+    extraSmall = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+    small = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+    medium = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+    large = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+    extraLarge = androidx.compose.foundation.shape.RoundedCornerShape(32.dp),
+)
 
 val Typography = Typography(
     displayLarge = baseline.displayLarge.copy(fontFamily = InterFontFamily),

@@ -76,7 +76,7 @@ import io.vscodex.net.core.settings.Settings.General.rememberIsDarkMode
 import io.vscodex.net.ui.LocalToastHostState
 import io.vscodex.net.ui.ToastHost
 import io.vscodex.net.ui.rememberToastHostState
-import io.vscodex.net.ui.theme.VSXTheme
+import io.vscodex.net.ui.theme.VSXThemeSurface
 import io.vscodex.net.utils.isStoragePermissionGranted
 
 abstract class BaseComposeActivity : AppCompatActivity() {
@@ -86,7 +86,7 @@ abstract class BaseComposeActivity : AppCompatActivity() {
         enableEdgeToEdge()
 
         setContent {
-            VSXTheme {
+            VSXThemeSurface {
                 val systemBarFollowThemeState by rememberSaveable { mutableStateOf(true) }
 
                 val followSystemTheme by rememberFollowSystemTheme()
